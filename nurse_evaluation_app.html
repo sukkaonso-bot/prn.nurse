@@ -1,0 +1,796 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>เส้นทางเอกสาร — ระบบประเมินพยาบาลวิชาชีพเพื่อปรับเป็นข้าราชการ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#16233F;
+    --ink-soft:#3C4A6B;
+    --teal:#0C6B5E;
+    --teal-dark:#094F45;
+    --teal-light:#E4F2EF;
+    --gold:#B08D2B;
+    --gold-light:#F3E9CE;
+    --paper:#F7F4EA;
+    --paper-line:#E4DFD0;
+    --card:#FFFFFF;
+    --red:#A23B32;
+    --red-light:#F5E4E1;
+    --green:#2F7D53;
+    --green-light:#E3F0E7;
+    --gray:#8A8577;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:'Sarabun',sans-serif;
+    background:var(--paper);
+    color:var(--ink);
+    min-height:100vh;
+  }
+  ::selection{background:var(--gold-light);}
+  button{font-family:inherit;cursor:pointer;}
+  input,select,textarea{font-family:inherit;}
+  .shell{display:flex;min-height:100vh;}
+
+  /* ---------- SIDEBAR ---------- */
+  .sidebar{
+    width:230px;flex-shrink:0;background:var(--ink);color:#EDE9DC;
+    display:flex;flex-direction:column;padding:24px 0;
+  }
+  .brand{padding:0 20px 20px;border-bottom:1px solid rgba(255,255,255,.12);margin-bottom:16px;}
+  .brand .seal{width:38px;height:38px;border-radius:50%;border:2px solid var(--gold);display:flex;align-items:center;justify-content:center;color:var(--gold);font-weight:700;font-size:15px;margin-bottom:10px;}
+  .brand h1{font-size:14px;font-weight:700;line-height:1.4;margin:0;color:#fff;}
+  .brand p{font-size:11px;color:#A8A28D;margin:4px 0 0;}
+  .nav-item{
+    display:flex;align-items:center;gap:10px;padding:11px 20px;font-size:14px;font-weight:500;
+    color:#C8C3AE;border-left:3px solid transparent;transition:.15s;
+  }
+  .nav-item.active{background:rgba(255,255,255,.06);color:#fff;border-left-color:var(--gold);}
+  .nav-item:hover{color:#fff;cursor:pointer;}
+  .nav-badge{margin-left:auto;background:var(--gold);color:var(--ink);font-size:11px;font-weight:700;padding:1px 7px;border-radius:10px;}
+  .sidebar-foot{margin-top:auto;padding:16px 20px 0;border-top:1px solid rgba(255,255,255,.12);font-size:12px;color:#A8A28D;}
+  .whoami{font-size:13px;color:#fff;font-weight:600;}
+  .role-tag{display:inline-block;margin-top:4px;font-size:11px;background:rgba(255,255,255,.1);padding:2px 8px;border-radius:20px;color:var(--gold-light);}
+  .logout-link{display:block;margin-top:10px;font-size:12px;color:#C8C3AE;text-decoration:underline;cursor:pointer;}
+
+  /* ---------- MAIN ---------- */
+  .main{flex:1;padding:32px 40px;max-width:980px;}
+  .page-head{margin-bottom:24px;}
+  .eyebrow{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--teal);font-weight:700;margin-bottom:4px;}
+  .page-head h2{font-size:24px;margin:0;font-weight:700;color:var(--ink);}
+  .page-head p{color:var(--ink-soft);font-size:14px;margin:6px 0 0;}
+
+  .toolbar{display:flex;gap:10px;align-items:center;margin-bottom:18px;flex-wrap:wrap;}
+  .search-box{flex:1;min-width:200px;position:relative;}
+  .search-box input{width:100%;padding:10px 14px;border:1px solid var(--paper-line);border-radius:8px;background:#fff;font-size:14px;}
+  .btn{
+    display:inline-flex;align-items:center;gap:6px;padding:10px 18px;border-radius:8px;border:none;
+    font-size:14px;font-weight:600;transition:.15s;
+  }
+  .btn-primary{background:var(--teal);color:#fff;}
+  .btn-primary:hover{background:var(--teal-dark);}
+  .btn-gold{background:var(--gold);color:#fff;}
+  .btn-ghost{background:transparent;color:var(--ink);border:1px solid var(--paper-line);}
+  .btn-ghost:hover{border-color:var(--ink);}
+  .btn-danger{background:var(--red);color:#fff;}
+  .btn-sm{padding:7px 12px;font-size:13px;}
+  .btn:disabled{opacity:.45;cursor:not-allowed;}
+
+  /* ---------- ROUTING RAIL (signature element) ---------- */
+  .rail{display:flex;align-items:center;gap:0;margin:6px 0;}
+  .rail-node{display:flex;flex-direction:column;align-items:center;gap:5px;width:78px;flex-shrink:0;}
+  .rail-dot{width:22px;height:22px;border-radius:50%;border:2px solid var(--paper-line);background:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--gray);}
+  .rail-dot.done{background:var(--teal);border-color:var(--teal);color:#fff;}
+  .rail-dot.current{background:var(--gold-light);border-color:var(--gold);color:var(--gold);box-shadow:0 0 0 4px var(--gold-light);}
+  .rail-dot.rejected{background:var(--red);border-color:var(--red);color:#fff;}
+  .rail-label{font-size:10.5px;color:var(--ink-soft);text-align:center;line-height:1.2;}
+  .rail-line{flex:1;height:2px;background:var(--paper-line);margin-top:-19px;min-width:14px;}
+  .rail-line.done{background:var(--teal);}
+
+  /* ---------- CARDS (folder metaphor) ---------- */
+  .folder{
+    background:var(--card);border:1px solid var(--paper-line);border-radius:10px;
+    padding:16px 18px;margin-bottom:12px;position:relative;border-top:4px solid var(--paper-line);
+    transition:.15s;
+  }
+  .folder:hover{box-shadow:0 4px 16px rgba(22,35,63,.06);}
+  .folder.tab-hr{border-top-color:var(--gold);}
+  .folder.tab-exec{border-top-color:var(--teal);}
+  .folder.tab-done-approved{border-top-color:var(--green);}
+  .folder.tab-done-rejected{border-top-color:var(--red);}
+  .folder-top{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap;}
+  .folder-name{font-size:16px;font-weight:700;color:var(--ink);}
+  .folder-dept{font-size:12.5px;color:var(--ink-soft);margin-top:2px;}
+  .folder-meta{font-size:11.5px;color:var(--gray);margin-top:6px;font-family:ui-monospace,monospace;}
+  .status-chip{font-size:11.5px;font-weight:700;padding:4px 10px;border-radius:20px;white-space:nowrap;}
+  .chip-hr{background:var(--gold-light);color:#8A6D1E;}
+  .chip-exec{background:var(--teal-light);color:var(--teal-dark);}
+  .chip-approved{background:var(--green-light);color:var(--green);}
+  .chip-rejected{background:var(--red-light);color:var(--red);}
+  .score-pill{font-family:ui-monospace,monospace;font-weight:700;font-size:15px;color:var(--ink);}
+  .folder-bottom{display:flex;justify-content:space-between;align-items:center;margin-top:12px;padding-top:12px;border-top:1px dashed var(--paper-line);}
+
+  .empty{padding:50px 20px;text-align:center;color:var(--gray);border:1px dashed var(--paper-line);border-radius:10px;background:#fff;}
+  .empty b{display:block;color:var(--ink);font-size:15px;margin-bottom:4px;}
+
+  /* ---------- FORMS ---------- */
+  .panel{background:#fff;border:1px solid var(--paper-line);border-radius:12px;padding:24px;}
+  .field{margin-bottom:16px;}
+  .field label{display:block;font-size:13px;font-weight:600;color:var(--ink-soft);margin-bottom:6px;}
+  .field input,.field select,.field textarea{
+    width:100%;padding:10px 12px;border:1px solid var(--paper-line);border-radius:8px;font-size:14px;background:#FCFBF7;
+  }
+  .field input:focus,.field select:focus,.field textarea:focus{outline:2px solid var(--teal);outline-offset:1px;border-color:var(--teal);}
+  .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+  @media(max-width:640px){.grid-2{grid-template-columns:1fr;}}
+
+  .cat-block{margin-bottom:22px;}
+  .cat-title{font-size:15px;font-weight:700;color:var(--ink);display:flex;justify-content:space-between;border-bottom:2px solid var(--ink);padding-bottom:6px;margin-bottom:12px;}
+  .cat-weight{color:var(--teal);font-family:ui-monospace,monospace;}
+  .item-row{display:flex;justify-content:space-between;align-items:center;gap:16px;padding:10px 0;border-bottom:1px solid var(--paper-line);}
+  .item-text{font-size:13.5px;color:var(--ink-soft);flex:1;}
+  .seg{display:flex;gap:4px;flex-shrink:0;}
+  .seg button{width:34px;height:34px;border-radius:7px;border:1px solid var(--paper-line);background:#fff;font-weight:700;font-size:13px;color:var(--gray);}
+  .seg button.active{background:var(--teal);color:#fff;border-color:var(--teal);}
+
+  .score-summary{position:sticky;bottom:0;background:#fff;border:1px solid var(--paper-line);border-radius:12px;padding:16px 20px;display:flex;justify-content:space-between;align-items:center;margin-top:18px;box-shadow:0 -6px 16px rgba(22,35,63,.05);}
+  .score-total{font-size:28px;font-weight:800;font-family:ui-monospace,monospace;color:var(--ink);}
+  .score-total.pass{color:var(--green);}
+  .score-total.fail{color:var(--red);}
+
+  /* ---------- ROLE / LOGIN SCREENS ---------- */
+  .center-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;}
+  .auth-card{background:#fff;border:1px solid var(--paper-line);border-radius:16px;padding:40px;max-width:440px;width:100%;box-shadow:0 12px 40px rgba(22,35,63,.08);}
+  .auth-seal{width:56px;height:56px;border-radius:50%;border:2px solid var(--gold);color:var(--gold);display:flex;align-items:center;justify-content:center;font-weight:800;margin:0 auto 16px;font-size:20px;}
+  .auth-card h2{text-align:center;font-size:19px;margin:0 0 4px;}
+  .auth-card p.sub{text-align:center;color:var(--ink-soft);font-size:13px;margin:0 0 26px;}
+  .role-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px;}
+  .role-opt{border:1.5px solid var(--paper-line);border-radius:10px;padding:14px 10px;text-align:center;font-size:13px;font-weight:600;color:var(--ink-soft);}
+  .role-opt.sel{border-color:var(--teal);background:var(--teal-light);color:var(--teal-dark);}
+  .role-opt .r-title{font-size:14px;font-weight:700;color:var(--ink);margin-bottom:2px;}
+
+  /* ---------- MISC ---------- */
+  .toast{position:fixed;bottom:24px;right:24px;background:var(--ink);color:#fff;padding:13px 20px;border-radius:9px;font-size:14px;z-index:200;box-shadow:0 8px 24px rgba(0,0,0,.2);}
+  .toast.error{background:var(--red);}
+  .modal-bg{position:fixed;inset:0;background:rgba(22,35,63,.45);display:flex;align-items:center;justify-content:center;z-index:150;padding:20px;}
+  .modal{background:#fff;border-radius:14px;padding:26px;max-width:460px;width:100%;}
+  .back-link{color:var(--teal);font-size:13px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:4px;margin-bottom:14px;}
+  .comment-box{background:var(--paper);border:1px solid var(--paper-line);border-radius:8px;padding:12px;font-size:13.5px;color:var(--ink-soft);font-style:italic;margin-top:6px;}
+
+  /* ---------- PRINT ---------- */
+  .print-sheet{display:none;}
+  @media print{
+    body *{visibility:hidden;}
+    .print-sheet,.print-sheet *{visibility:visible;}
+    .print-sheet{display:block;position:absolute;top:0;left:0;width:100%;padding:20px;}
+  }
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div id="print-root" class="print-sheet"></div>
+
+<script>
+/* =========================================================================
+   CONFIG — แก้ API_URL ตรงนี้แล้วบันทึกไฟล์ ถ้าต้องการให้จำ URL ถาวร
+   (ไม่ใช้ localStorage เพราะตัวอย่างนี้รันในหน้าพรีวิวแบบ sandbox;
+   เมื่อนำไฟล์นี้ไป host เองสามารถใส่ localStorage เพิ่มเองได้ภายหลัง)
+   ========================================================================= */
+const CONFIG = { API_URL: "" }; // <- วาง Web App URL จาก Apps Script (ลงท้าย /exec) ถ้าต้องการ hardcode
+
+let state = {
+  apiUrl: CONFIG.API_URL,
+  connected: false,
+  loading: false,
+  role: null,        // ward | hr | exec | admin
+  actorName: "",
+  view: "dashboard",  // dashboard | new | detail | criteria
+  currentEvalId: null,
+  nurses: [],
+  evaluations: [],
+  criteria: { categories: [], passingScore: 60 },
+  scores: {},         // draft scores for new/edit form
+  toast: null,
+};
+
+const ROLES = {
+  ward:  { label: "หัวหน้าตึก", desc: "บันทึกและให้คะแนนการประเมิน", stage: "ward" },
+  hr:    { label: "ฝ่าย HR",    desc: "ตรวจสอบและส่งต่อ",             stage: "hr" },
+  exec:  { label: "ผู้บริหาร",   desc: "อนุมัติผลขั้นสุดท้าย",          stage: "exec" },
+  admin: { label: "ผู้ดูแลระบบ", desc: "ตั้งค่าเกณฑ์การประเมิน",       stage: "admin" },
+};
+
+/* ---------------- API HELPERS ---------------- */
+async function apiGet(action){
+  const res = await fetch(`${state.apiUrl}?action=${action}`);
+  return res.json();
+}
+async function apiPost(action, payload){
+  const res = await fetch(state.apiUrl, {
+    method: "POST",
+    headers: { "Content-Type": "text/plain;charset=utf-8" },
+    body: JSON.stringify({ action, payload })
+  });
+  return res.json();
+}
+
+async function loadAll(){
+  state.loading = true; render();
+  try{
+    const data = await apiGet("all");
+    if(data.error) throw new Error(data.error);
+    state.nurses = data.nurses || [];
+    state.evaluations = data.evaluations || [];
+    state.criteria = data.criteria || { categories: [], passingScore: 60 };
+    state.connected = true;
+  }catch(err){
+    showToast("เชื่อมต่อฐานข้อมูลไม่สำเร็จ: " + err.message, "error");
+    state.connected = false;
+  }
+  state.loading = false; render();
+}
+
+function showToast(msg, type="success"){
+  state.toast = { msg, type };
+  render();
+  setTimeout(()=>{ state.toast=null; render(); }, 3200);
+}
+
+/* ---------------- SCORE CALCULATION ---------------- */
+function computeResult(scores, categories, passingScore){
+  let total = 0; const details = [];
+  categories.forEach(cat=>{
+    let sum=0; const max = cat.items.length*5;
+    cat.items.forEach(it=> sum += Number(scores[it.id]||0));
+    const pct = max>0 ? (sum/max)*100 : 0;
+    const contrib = (pct*cat.weight)/100;
+    total += contrib;
+    details.push({ catId:cat.id, catName:cat.name, sum, max, pct:pct.toFixed(1), weight:cat.weight, contrib:contrib.toFixed(1) });
+  });
+  return { totalScore: total.toFixed(1), isPassed: total >= passingScore, details, passingScore };
+}
+
+/* ---------------- NAV / ROLE ---------------- */
+function selectRole(r){ state.role = r; render(); }
+function confirmLogin(){
+  const name = document.getElementById("loginName");
+  const pass = document.getElementById("loginPass");
+  if(state.role !== "admin"){
+    if(!name.value.trim()){ showToast("กรุณากรอกชื่อ-นามสกุลก่อนเข้าใช้งาน","error"); return; }
+    state.actorName = name.value.trim();
+  } else {
+    // fetch fresh passcode check happens server-side on save; here just gate UI locally with a quick client check disabled
+    state.actorName = "ผู้ดูแลระบบ";
+  }
+  state.view = state.role === "admin" ? "criteria" : "dashboard";
+  loadAll();
+}
+function logout(){ state.role=null; state.actorName=""; state.connected=false; render(); }
+function goto(view, id=null){ state.view=view; state.currentEvalId=id; window.scrollTo(0,0); render(); }
+
+/* ---------------- RENDER: ROOT ---------------- */
+function render(){
+  const app = document.getElementById("app");
+  if(!state.apiUrl){ app.innerHTML = renderSetupScreen(); attachSetupEvents(); return; }
+  if(!state.role){ app.innerHTML = renderLoginScreen(); attachLoginEvents(); return; }
+
+  app.innerHTML = `
+    <div class="shell">
+      ${renderSidebar()}
+      <div class="main">
+        ${state.loading ? `<div class="empty">กำลังโหลดข้อมูลจาก Google Sheets…</div>` : renderView()}
+      </div>
+    </div>
+    ${state.toast ? `<div class="toast ${state.toast.type}">${state.toast.msg}</div>` : ""}
+  `;
+  attachViewEvents();
+}
+
+/* ---------------- SETUP SCREEN ---------------- */
+function renderSetupScreen(){
+  return `
+  <div class="center-screen">
+    <div class="auth-card">
+      <div class="auth-seal">DB</div>
+      <h2>เชื่อมต่อฐานข้อมูล Google Sheets</h2>
+      <p class="sub">วาง Web App URL ที่ได้จากการ Deploy Google Apps Script (ดูขั้นตอนในไฟล์ AppsScript_Backend.gs)</p>
+      <div class="field"><label>Web App URL</label><input id="apiUrlInput" placeholder="https://script.google.com/macros/s/xxxx/exec"></div>
+      <button class="btn btn-primary" style="width:100%;justify-content:center" id="connectBtn">เชื่อมต่อ</button>
+    </div>
+  </div>`;
+}
+function attachSetupEvents(){
+  document.getElementById("connectBtn").onclick = ()=>{
+    const v = document.getElementById("apiUrlInput").value.trim();
+    if(!v){ showToast("กรุณาวาง URL ก่อน","error"); return; }
+    state.apiUrl = v; render();
+  };
+}
+
+/* ---------------- LOGIN / ROLE SCREEN ---------------- */
+function renderLoginScreen(){
+  return `
+  <div class="center-screen">
+    <div class="auth-card">
+      <div class="auth-seal">護</div>
+      <h2>ระบบเวียนแฟ้มประเมินพยาบาลวิชาชีพ</h2>
+      <p class="sub">เพื่อปรับเป็นข้าราชการ — เลือกบทบาทของท่านเพื่อเข้าใช้งาน</p>
+      <div class="role-grid">
+        ${Object.entries(ROLES).map(([k,v])=>`
+          <div class="role-opt ${state.role===k?'sel':''}" data-role="${k}">
+            <div class="r-title">${v.label}</div>
+            <div>${v.desc}</div>
+          </div>`).join("")}
+      </div>
+      ${state.role ? `
+        <div class="field"><label>${state.role==='admin' ? 'รหัสผ่านผู้ดูแลระบบ' : 'ชื่อ-นามสกุลผู้ใช้งาน'}</label>
+        <input id="loginName" placeholder="${state.role==='admin' ? '' : 'เช่น นางสาวสมหญิง ใจดี'}" ${state.role==='admin'?'style="display:none"':''}>
+        ${state.role==='admin' ? `<input id="loginPass" type="password" placeholder="กรอกรหัสผ่าน">` : ''}
+        </div>
+        <button class="btn btn-primary" style="width:100%;justify-content:center" id="loginBtn">เข้าสู่ระบบ</button>
+      ` : ''}
+    </div>
+  </div>`;
+}
+function attachLoginEvents(){
+  document.querySelectorAll(".role-opt").forEach(el=>{
+    el.onclick = ()=> selectRole(el.dataset.role);
+  });
+  const btn = document.getElementById("loginBtn");
+  if(btn) btn.onclick = confirmLogin;
+}
+
+/* ---------------- SIDEBAR ---------------- */
+function stageCount(stage){
+  return state.evaluations.filter(e=> e.stage === stage).length;
+}
+function renderSidebar(){
+  const r = ROLES[state.role];
+  const items = [{k:'dashboard',label:'แฟ้มทั้งหมด'}];
+  if(state.role==='ward') items.push({k:'new',label:'+ สร้างรายการประเมิน'});
+  if(state.role==='admin') items.push({k:'criteria',label:'ตั้งค่าเกณฑ์ประเมิน'});
+  return `
+  <div class="sidebar">
+    <div class="brand">
+      <div class="seal">護</div>
+      <h1>เส้นทางเอกสาร</h1>
+      <p>ระบบประเมินพยาบาลสู่ข้าราชการ</p>
+    </div>
+    ${items.map(it=>`
+      <div class="nav-item ${state.view===it.k?'active':''}" data-goto="${it.k}">
+        <span>${it.label}</span>
+        ${it.k==='dashboard' && state.role!=='admin' ? `<span class="nav-badge">${stageCount(r.stage)}</span>` : ''}
+      </div>`).join("")}
+    <div class="sidebar-foot">
+      <div class="whoami">${state.actorName}</div>
+      <span class="role-tag">${r.label}</span>
+      <span class="logout-link" id="logoutBtn">ออกจากระบบ / เปลี่ยนบทบาท</span>
+    </div>
+  </div>`;
+}
+
+/* ---------------- ROUTING RAIL COMPONENT ---------------- */
+function railNodeState(ev, key){
+  if(key==='ward') return 'done';
+  if(key==='hr'){
+    if(ev.hrStatus==='endorsed') return 'done';
+    if(ev.hrStatus==='returned') return 'rejected';
+    if(ev.stage==='hr') return 'current';
+    return 'pending';
+  }
+  if(key==='exec'){
+    if(ev.execStatus==='approved') return 'done';
+    if(ev.execStatus==='rejected') return 'rejected';
+    if(ev.stage==='exec') return 'current';
+    return 'pending';
+  }
+}
+function renderRail(ev){
+  const nodes = [
+    {k:'ward', label:'หัวหน้าตึก', icon:'1'},
+    {k:'hr', label:'ฝ่าย HR', icon:'2'},
+    {k:'exec', label:'ผู้บริหาร', icon:'3'},
+  ];
+  return `<div class="rail">
+    ${nodes.map((n,i)=>{
+      const st = railNodeState(ev, n.k);
+      const dotHtml = st==='done' ? '✓' : (st==='rejected' ? '✕' : n.icon);
+      const lineDone = (n.k==='ward') || (n.k==='hr' && st==='done');
+      return `<div class="rail-node">
+          <div style="display:flex;align-items:center;width:100%;">
+            ${i>0 ? `<div class="rail-line ${lineDone||railNodeState(ev,nodes[i-1].k)==='done'?'done':''}"></div>` : ''}
+            <div class="rail-dot ${st}">${dotHtml}</div>
+          </div>
+          <div class="rail-label">${n.label}</div>
+        </div>`;
+    }).join("")}
+  </div>`;
+}
+
+/* ---------------- VIEW ROUTER ---------------- */
+function renderView(){
+  if(state.view==='dashboard') return renderDashboard();
+  if(state.view==='new') return renderNewEvalForm();
+  if(state.view==='detail') return renderDetail();
+  if(state.view==='criteria') return renderCriteriaAdmin();
+  return '';
+}
+
+/* ---------------- DASHBOARD ---------------- */
+function statusChip(ev){
+  if(ev.stage==='hr') return `<span class="status-chip chip-hr">รอฝ่าย HR ตรวจสอบ</span>`;
+  if(ev.stage==='exec') return `<span class="status-chip chip-exec">รอผู้บริหารอนุมัติ</span>`;
+  if(ev.stage==='ward') return `<span class="status-chip chip-hr" style="background:var(--red-light);color:var(--red)">HR ส่งกลับให้แก้ไข</span>`;
+  if(ev.execStatus==='approved') return `<span class="status-chip chip-approved">อนุมัติแล้ว</span>`;
+  if(ev.execStatus==='rejected') return `<span class="status-chip chip-rejected">ไม่ผ่านการอนุมัติ</span>`;
+  return '';
+}
+function tabClass(ev){
+  if(ev.stage==='hr') return 'tab-hr';
+  if(ev.stage==='exec') return 'tab-exec';
+  if(ev.execStatus==='approved') return 'tab-done-approved';
+  if(ev.execStatus==='rejected') return 'tab-done-rejected';
+  return '';
+}
+function renderDashboard(){
+  const r = ROLES[state.role];
+  let list = [...state.evaluations].sort((a,b)=> new Date(b.updatedAt)-new Date(a.updatedAt));
+  const q = (state._search||"").toLowerCase();
+  if(q) list = list.filter(e=> (e.nurseName||"").toLowerCase().includes(q) || (e.department||"").toLowerCase().includes(q));
+
+  const myTurn = list.filter(e=> e.stage === r.stage);
+  const others = list.filter(e=> e.stage !== r.stage);
+
+  const renderCard = (ev)=> `
+    <div class="folder ${tabClass(ev)}" data-open="${ev.id}">
+      <div class="folder-top">
+        <div>
+          <div class="folder-name">${ev.nurseName}</div>
+          <div class="folder-dept">${ev.department}</div>
+          <div class="folder-meta">รหัสแฟ้ม: ${ev.id}</div>
+        </div>
+        <div style="text-align:right">
+          ${statusChip(ev)}
+          <div class="score-pill" style="margin-top:6px">${ev.finalScore}%</div>
+        </div>
+      </div>
+      <div class="folder-bottom">
+        ${renderRail(ev)}
+        <button class="btn btn-ghost btn-sm" data-open="${ev.id}">เปิดแฟ้ม →</button>
+      </div>
+    </div>`;
+
+  return `
+    <div class="page-head">
+      <div class="eyebrow">${r.label}</div>
+      <h2>แฟ้มการประเมินทั้งหมด</h2>
+      <p>ติดตามสถานะแฟ้มที่กำลังเวียนอยู่ในระบบ ตั้งแต่หัวหน้าตึกจนถึงผู้บริหาร</p>
+    </div>
+    <div class="toolbar">
+      <div class="search-box"><input id="searchInput" placeholder="ค้นหาชื่อพยาบาลหรือหน่วยงาน..." value="${state._search||""}"></div>
+      ${state.role==='ward' ? `<button class="btn btn-primary" data-goto="new">+ สร้างรายการประเมิน</button>` : ''}
+    </div>
+    ${myTurn.length ? `<div class="eyebrow" style="margin-bottom:8px">รอดำเนินการโดยท่าน (${myTurn.length})</div>${myTurn.map(renderCard).join("")}` : ''}
+    ${others.length ? `<div class="eyebrow" style="margin:20px 0 8px">แฟ้มอื่น ๆ ในระบบ</div>${others.map(renderCard).join("")}` : ''}
+    ${!list.length ? `<div class="empty"><b>ยังไม่มีแฟ้มการประเมิน</b>${state.role==='ward' ? 'เริ่มต้นด้วยการสร้างรายการประเมินใหม่' : 'รอหัวหน้าตึกเริ่มสร้างรายการประเมิน'}</div>` : ''}
+  `;
+}
+
+/* ---------------- NEW EVALUATION FORM (ward) ---------------- */
+function initDraftScores(){
+  state.scores = {};
+  state.criteria.categories.forEach(c=> c.items.forEach(it=> state.scores[it.id]=3));
+}
+function renderScoreSeg(itemId){
+  const val = state.scores[itemId]||3;
+  return `<div class="seg" data-item="${itemId}">
+    ${[1,2,3,4,5].map(n=>`<button data-val="${n}" class="${n===val?'active':''}">${n}</button>`).join("")}
+  </div>`;
+}
+function renderCategoriesForm(){
+  return state.criteria.categories.map(cat=>`
+    <div class="cat-block">
+      <div class="cat-title"><span>${cat.name}</span><span class="cat-weight">น้ำหนัก ${cat.weight}%</span></div>
+      ${cat.items.map(it=>`
+        <div class="item-row">
+          <div class="item-text">${it.text}</div>
+          ${renderScoreSeg(it.id)}
+        </div>`).join("")}
+    </div>`).join("");
+}
+function renderNewEvalForm(prefill){
+  if(!Object.keys(state.scores).length) initDraftScores();
+  const nurseOpts = state.nurses.map(n=>`<option value="${n.id}">${n.name} — ${n.department}</option>`).join("");
+  const result = computeResult(state.scores, state.criteria.categories, state.criteria.passingScore);
+  return `
+    <div class="back-link" data-goto="dashboard">← กลับหน้าแฟ้มทั้งหมด</div>
+    <div class="page-head">
+      <div class="eyebrow">หัวหน้าตึก</div>
+      <h2>สร้างรายการประเมิน</h2>
+      <p>กรอกและให้คะแนนตามเกณฑ์ ระบบจะคำนวณคะแนนรวมให้อัตโนมัติ</p>
+    </div>
+    <div class="panel">
+      <div class="grid-2">
+        <div class="field"><label>เลือกพยาบาลจากทะเบียน</label>
+          <select id="nurseSelect"><option value="">— เลือกหรือพิมพ์เอง —</option>${nurseOpts}<option value="custom">พิมพ์เอง / ไม่อยู่ในรายชื่อ</option></select>
+        </div>
+        <div class="field"><label>ชื่อ-นามสกุลผู้รับการประเมิน</label><input id="nurseName" placeholder="เช่น นางสาวสมหญิง ใจดี"></div>
+      </div>
+      <div class="grid-2">
+        <div class="field"><label>หน่วยงาน/แผนก</label><input id="dept" placeholder="เช่น หอผู้ป่วยอายุรกรรม"></div>
+        <div class="field"><label>วันที่เริ่มปฏิบัติงาน</label><input id="startDate" type="date"></div>
+      </div>
+      <div class="grid-2">
+        <div class="field"><label>ชื่อหัวหน้าตึก (ผู้ประเมิน)</label><input id="wardHeadName" value="${state.actorName}"></div>
+        <div class="field"><label>วันที่ประเมิน</label><input id="evalDate" type="date" value="${new Date().toISOString().split('T')[0]}"></div>
+      </div>
+      <hr style="border:none;border-top:1px solid var(--paper-line);margin:20px 0">
+      ${renderCategoriesForm()}
+      <div class="field"><label>ความเห็นเพิ่มเติมของหัวหน้าตึก</label><textarea id="wardComment" rows="3" placeholder="ความประพฤติ จุดเด่น จุดที่ควรพัฒนา..."></textarea></div>
+    </div>
+    <div class="score-summary">
+      <div>
+        <div style="font-size:12px;color:var(--ink-soft)">คะแนนรวมถ่วงน้ำหนัก (เกณฑ์ผ่าน ${state.criteria.passingScore}%)</div>
+        <div class="score-total ${result.isPassed?'pass':'fail'}" id="liveTotal">${result.totalScore}%</div>
+      </div>
+      <button class="btn btn-primary btn-sm" id="submitEvalBtn">ส่งให้ฝ่าย HR ตรวจสอบ →</button>
+    </div>
+  `;
+}
+
+/* ---------------- DETAIL / REVIEW VIEW ---------------- */
+function renderDetail(){
+  const ev = state.evaluations.find(e=> e.id === state.currentEvalId);
+  if(!ev) return `<div class="empty">ไม่พบแฟ้มนี้</div>`;
+  const canHr = state.role==='hr' && ev.stage==='hr';
+  const canExec = state.role==='exec' && ev.stage==='exec';
+
+  return `
+    <div class="back-link" data-goto="dashboard">← กลับหน้าแฟ้มทั้งหมด</div>
+    <div class="page-head">
+      <div class="eyebrow">รหัสแฟ้ม ${ev.id}</div>
+      <h2>${ev.nurseName}</h2>
+      <p>${ev.department} · เริ่มปฏิบัติงาน ${ev.startDate||'-'}</p>
+    </div>
+    <div class="panel" style="margin-bottom:16px">${renderRail(ev)}</div>
+
+    <div class="panel" style="margin-bottom:16px">
+      <div class="eyebrow">ผลการประเมินโดยหัวหน้าตึก</div>
+      <div class="grid-2" style="margin:12px 0">
+        <div><b>ผู้ประเมิน:</b> ${ev.wardHeadName}</div>
+        <div><b>วันที่:</b> ${(ev.wardDate||'').split('T')[0]}</div>
+      </div>
+      ${state.criteria.categories.map(cat=>{
+        const det = (ev.finalDetails||[]).find?.(d=>d.catId===cat.id);
+        return `<div class="cat-block">
+          <div class="cat-title"><span>${cat.name}</span><span class="cat-weight">น้ำหนัก ${cat.weight}%</span></div>
+          ${cat.items.map(it=>`<div class="item-row"><div class="item-text">${it.text}</div><b>${(ev.wardScoresJson||{})[it.id]||'-'} / 5</b></div>`).join("")}
+        </div>`;
+      }).join("")}
+      <div class="score-summary" style="position:static">
+        <div style="font-size:13px">คะแนนรวมถ่วงน้ำหนัก</div>
+        <div class="score-total ${ev.isPassed==='true'||ev.isPassed===true?'pass':'fail'}">${ev.finalScore}%</div>
+      </div>
+      ${ev.wardComment ? `<div class="comment-box">"${ev.wardComment}"</div>` : ''}
+    </div>
+
+    <div class="panel" style="margin-bottom:16px">
+      <div class="eyebrow">ฝ่าย HR</div>
+      ${ev.hrStatus==='pending' ? `<p style="color:var(--gray)">ยังไม่มีการตรวจสอบ</p>` : `
+        <div class="grid-2"><div><b>ผู้ตรวจสอบ:</b> ${ev.hrName}</div><div><b>ผล:</b> ${ev.hrStatus==='endorsed'?'✅ รับรองส่งต่อ':'↩️ ส่งกลับแก้ไข'}</div></div>
+        ${ev.hrComment ? `<div class="comment-box">"${ev.hrComment}"</div>` : ''}
+      `}
+      ${canHr ? `
+        <div class="field" style="margin-top:16px"><label>ความเห็นฝ่าย HR</label><textarea id="hrComment" rows="2" placeholder="ตรวจสอบเอกสาร คุณสมบัติ วันเริ่มงาน ฯลฯ"></textarea></div>
+        <div style="display:flex;gap:10px;margin-top:8px">
+          <button class="btn btn-primary" id="hrEndorseBtn">✅ รับรอง ส่งต่อผู้บริหาร</button>
+          <button class="btn btn-ghost" id="hrReturnBtn">↩️ ส่งกลับให้หัวหน้าตึกแก้ไข</button>
+        </div>
+      ` : ''}
+    </div>
+
+    <div class="panel">
+      <div class="eyebrow">ผู้บริหาร</div>
+      ${ev.execStatus==='pending' ? `<p style="color:var(--gray)">ยังไม่มีการอนุมัติ</p>` : `
+        <div class="grid-2"><div><b>ผู้อนุมัติ:</b> ${ev.execName}</div><div><b>ผล:</b> ${ev.execStatus==='approved'?'✅ อนุมัติ':'❌ ไม่อนุมัติ'}</div></div>
+        <div style="margin-top:6px"><b>มติ:</b> ${ev.execDecision||'-'}</div>
+        ${ev.execComment ? `<div class="comment-box">"${ev.execComment}"</div>` : ''}
+      `}
+      ${canExec ? `
+        <div class="field" style="margin-top:16px"><label>มติผู้บริหาร</label>
+          <select id="execDecisionSel">
+            <option>บรรจุเป็นข้าราชการ</option>
+            <option>ขยายเวลาทดลองปฏิบัติงาน</option>
+            <option>ไม่บรรจุเป็นข้าราชการ</option>
+          </select>
+        </div>
+        <div class="field"><label>ความเห็นผู้บริหาร</label><textarea id="execComment" rows="2"></textarea></div>
+        <div style="display:flex;gap:10px;margin-top:8px">
+          <button class="btn btn-primary" id="execApproveBtn">✅ อนุมัติผลการประเมิน</button>
+          <button class="btn btn-danger" id="execRejectBtn">❌ ไม่อนุมัติ</button>
+        </div>
+      ` : ''}
+    </div>
+
+    ${ev.stage==='done' ? `<div style="margin-top:16px;text-align:right"><button class="btn btn-gold" id="printBtn">🖨 พิมพ์เอกสารทางการ</button></div>` : ''}
+  `;
+}
+
+/* ---------------- CRITERIA ADMIN ---------------- */
+function renderCriteriaAdmin(){
+  return `
+    <div class="page-head">
+      <div class="eyebrow">ผู้ดูแลระบบ</div>
+      <h2>ตั้งค่าเกณฑ์การประเมิน</h2>
+      <p>ปรับหมวด น้ำหนักคะแนน และเกณฑ์ผ่าน (มีผลกับแฟ้มที่สร้างใหม่เท่านั้น)</p>
+    </div>
+    <div class="panel">
+      <div class="field" style="max-width:220px"><label>เกณฑ์คะแนนผ่าน (%)</label><input id="passingScoreInput" type="number" value="${state.criteria.passingScore}"></div>
+      ${state.criteria.categories.map((cat,ci)=>`
+        <div class="cat-block">
+          <div class="cat-title"><span>${cat.name}</span><span class="cat-weight">น้ำหนัก ${cat.weight}%</span></div>
+          ${cat.items.map(it=>`<div class="item-row"><div class="item-text">${it.text}</div></div>`).join("")}
+        </div>`).join("")}
+      <div class="field"><label>รหัสผ่านผู้ดูแลระบบ (ยืนยันการบันทึก)</label><input id="adminPass" type="password"></div>
+      <button class="btn btn-primary" id="saveCriteriaBtn">บันทึกการตั้งค่า</button>
+      <p style="font-size:12px;color:var(--gray);margin-top:10px">หมายเหตุ: หน้านี้แสดงหมวด/น้ำหนักปัจจุบันเท่านั้น การแก้ไขข้อความรายข้อควรทำโดยตรงในชีต "Config" (คอลัมน์ categoriesJson) เพื่อความรวดเร็วในการดูแลระบบ</p>
+    </div>
+  `;
+}
+
+/* ---------------- EVENT WIRING ---------------- */
+function attachViewEvents(){
+  document.querySelectorAll("[data-goto]").forEach(el=>{
+    el.onclick = ()=> goto(el.dataset.goto, el.dataset.open||null);
+  });
+  document.querySelectorAll("[data-open]").forEach(el=>{
+    el.onclick = ()=> goto('detail', el.dataset.open);
+  });
+  const logoutBtn = document.getElementById("logoutBtn");
+  if(logoutBtn) logoutBtn.onclick = logout;
+
+  const search = document.getElementById("searchInput");
+  if(search) search.oninput = (e)=>{ state._search = e.target.value; renderDashboardOnly(); };
+
+  // segmented score buttons — direct DOM update, no full re-render (keeps inputs stable)
+  document.querySelectorAll(".seg button").forEach(btn=>{
+    btn.onclick = ()=>{
+      const seg = btn.closest(".seg");
+      const itemId = seg.dataset.item;
+      state.scores[itemId] = Number(btn.dataset.val);
+      seg.querySelectorAll("button").forEach(b=> b.classList.toggle("active", b===btn));
+      const result = computeResult(state.scores, state.criteria.categories, state.criteria.passingScore);
+      const totalEl = document.getElementById("liveTotal");
+      if(totalEl){ totalEl.textContent = result.totalScore+"%"; totalEl.className = "score-total "+(result.isPassed?"pass":"fail"); }
+    };
+  });
+
+  const nurseSelect = document.getElementById("nurseSelect");
+  if(nurseSelect) nurseSelect.onchange = (e)=>{
+    const val = e.target.value;
+    if(val && val!=="custom"){
+      const n = state.nurses.find(x=> String(x.id)===val);
+      if(n){ document.getElementById("nurseName").value=n.name; document.getElementById("dept").value=n.department; document.getElementById("startDate").value=n.startDate; }
+    }
+  };
+
+  const submitBtn = document.getElementById("submitEvalBtn");
+  if(submitBtn) submitBtn.onclick = submitNewEvaluation;
+
+  const hrEndorse = document.getElementById("hrEndorseBtn");
+  if(hrEndorse) hrEndorse.onclick = ()=> doHrAction("endorse");
+  const hrReturn = document.getElementById("hrReturnBtn");
+  if(hrReturn) hrReturn.onclick = ()=> doHrAction("return");
+
+  const execApprove = document.getElementById("execApproveBtn");
+  if(execApprove) execApprove.onclick = ()=> doExecAction("approve");
+  const execReject = document.getElementById("execRejectBtn");
+  if(execReject) execReject.onclick = ()=> doExecAction("reject");
+
+  const saveCriteria = document.getElementById("saveCriteriaBtn");
+  if(saveCriteria) saveCriteria.onclick = saveCriteriaSettings;
+
+  const printBtn = document.getElementById("printBtn");
+  if(printBtn) printBtn.onclick = ()=> printEvaluation(state.currentEvalId);
+}
+function renderDashboardOnly(){
+  document.querySelector(".main").innerHTML = state.loading ? "" : renderView();
+  attachViewEvents();
+}
+
+/* ---------------- ACTIONS ---------------- */
+async function submitNewEvaluation(){
+  const nurseName = document.getElementById("nurseName").value.trim();
+  const dept = document.getElementById("dept").value.trim();
+  if(!nurseName || !dept){ showToast("กรุณากรอกชื่อและหน่วยงานของผู้รับการประเมิน","error"); return; }
+  const wardHeadName = document.getElementById("wardHeadName").value.trim();
+  if(!wardHeadName){ showToast("กรุณากรอกชื่อหัวหน้าตึก","error"); return; }
+
+  const result = computeResult(state.scores, state.criteria.categories, state.criteria.passingScore);
+  const payload = {
+    nurseId: document.getElementById("nurseSelect").value || "",
+    nurseName, department: dept,
+    startDate: document.getElementById("startDate").value,
+    evalDate: document.getElementById("evalDate").value,
+    wardHeadName,
+    wardScores: state.scores,
+    wardComment: document.getElementById("wardComment").value.trim(),
+    finalScore: result.totalScore,
+    isPassed: result.isPassed
+  };
+  const btn = document.getElementById("submitEvalBtn"); btn.disabled = true; btn.textContent = "กำลังบันทึก...";
+  const res = await apiPost("createEvaluation", payload);
+  btn.disabled = false;
+  if(res.error){ showToast("บันทึกไม่สำเร็จ: "+res.error, "error"); return; }
+  showToast("ส่งแฟ้มให้ฝ่าย HR เรียบร้อยแล้ว");
+  await loadAll();
+  goto("dashboard");
+}
+
+async function doHrAction(decision){
+  const comment = document.getElementById("hrComment").value.trim();
+  const res = await apiPost("hrAction", { id: state.currentEvalId, decision, comment, actorName: state.actorName });
+  if(res.error){ showToast("ดำเนินการไม่สำเร็จ: "+res.error,"error"); return; }
+  showToast(decision==='endorse' ? "รับรองและส่งต่อผู้บริหารแล้ว" : "ส่งกลับให้หัวหน้าตึกแก้ไขแล้ว");
+  await loadAll(); goto("dashboard");
+}
+
+async function doExecAction(decision){
+  const comment = document.getElementById("execComment").value.trim();
+  const finalDecision = document.getElementById("execDecisionSel").value;
+  const res = await apiPost("execAction", { id: state.currentEvalId, decision, comment, finalDecision, actorName: state.actorName });
+  if(res.error){ showToast("ดำเนินการไม่สำเร็จ: "+res.error,"error"); return; }
+  showToast(decision==='approve' ? "อนุมัติผลการประเมินเรียบร้อยแล้ว" : "บันทึกผลไม่อนุมัติแล้ว");
+  await loadAll(); goto("dashboard");
+}
+
+async function saveCriteriaSettings(){
+  const pass = document.getElementById("adminPass").value;
+  const passingScore = Number(document.getElementById("passingScoreInput").value);
+  const res = await apiPost("saveCriteria", { categories: state.criteria.categories, passingScore, passcode: pass });
+  if(res.error){ showToast("บันทึกไม่สำเร็จ: "+res.error, "error"); return; }
+  showToast("บันทึกการตั้งค่าเรียบร้อยแล้ว");
+  await loadAll();
+}
+
+/* ---------------- PRINT ---------------- */
+function printEvaluation(id){
+  const ev = state.evaluations.find(e=>e.id===id);
+  if(!ev) return;
+  const rows = state.criteria.categories.map(cat=>{
+    const items = cat.items.map(it=>`<tr><td style="padding:4px 8px;font-size:12px;color:#444">- ${it.text}</td><td style="text-align:center">${(ev.wardScoresJson||{})[it.id]||'-'}/5</td></tr>`).join("");
+    return `<tr style="background:#f2f2f2;font-weight:700"><td style="padding:6px 8px">${cat.name}</td><td style="text-align:center">${cat.weight}%</td></tr>${items}`;
+  }).join("");
+  document.getElementById("print-root").innerHTML = `
+    <div style="font-family:'Sarabun',sans-serif;color:#16233F">
+      <h2 style="text-align:center;margin-bottom:0">แบบสรุปผลการประเมินพยาบาลวิชาชีพเพื่อปรับเป็นข้าราชการ</h2>
+      <p style="text-align:center;color:#555;margin-top:4px">รหัสแฟ้ม: ${ev.id}</p>
+      <table style="width:100%;border-collapse:collapse;margin-top:10px" border="1">
+        <tr><td style="padding:6px 8px"><b>ชื่อ-นามสกุล:</b> ${ev.nurseName}</td><td style="padding:6px 8px"><b>หน่วยงาน:</b> ${ev.department}</td></tr>
+        <tr><td style="padding:6px 8px"><b>วันเริ่มปฏิบัติงาน:</b> ${ev.startDate||'-'}</td><td style="padding:6px 8px"><b>วันที่ประเมิน:</b> ${(ev.wardDate||'').split('T')[0]}</td></tr>
+      </table>
+      <table style="width:100%;border-collapse:collapse;margin-top:14px" border="1">${rows}
+        <tr style="font-weight:800"><td style="padding:8px">คะแนนรวมถ่วงน้ำหนัก</td><td style="text-align:center">${ev.finalScore}%</td></tr>
+      </table>
+      <p style="margin-top:14px"><b>ความเห็นหัวหน้าตึก (${ev.wardHeadName}):</b> ${ev.wardComment||'-'}</p>
+      <p><b>ความเห็นฝ่าย HR (${ev.hrName||'-'}):</b> ${ev.hrComment||'-'} — ${ev.hrStatus==='endorsed'?'รับรอง':'ส่งกลับ'}</p>
+      <p><b>มติผู้บริหาร (${ev.execName||'-'}):</b> ${ev.execDecision||'-'} — ${ev.execComment||''}</p>
+      <div style="display:flex;justify-content:space-between;margin-top:60px;text-align:center;font-size:13px">
+        <div>ลงชื่อ..........................................<br>(${ev.wardHeadName})<br>หัวหน้าตึก</div>
+        <div>ลงชื่อ..........................................<br>(${ev.hrName||''})<br>ฝ่าย HR</div>
+        <div>ลงชื่อ..........................................<br>(${ev.execName||''})<br>ผู้บริหาร</div>
+      </div>
+    </div>`;
+  window.print();
+}
+
+/* ---------------- INIT ---------------- */
+render();
+</script>
+</body>
+</html>
