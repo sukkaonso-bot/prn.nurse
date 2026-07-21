@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ระบบประเมินผลการปฏิบัติงาน - พยาบาล</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy: #10304A;
+    --navy-deep: #0B2338;
+    --teal: #1B8A83;
+    --teal-light: #E4F4F2;
+    --gold: #B8862E;
+    --paper: #FBF9F3;
+    --paper-line: #E7E0CE;
+    --ink: #232320;
+    --ink-soft: #5C5B54;
+    --ok: #2F7A54;
+    --ok-bg: #E7F4EC;
+    --bad: #A6403A;
+    --bad-bg: #FBEAE8;
+    --shadow: 0 2px 10px rgba(16,48,74,0.08);
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; font-family:'Sarabun',sans-serif; background:#EFEAE0; color:var(--ink);
+  }
+  #app{max-width:980px;margin:0 auto;padding:0 16px 60px;}
+
+  /* HEADER */
+  .topbar{
+    background:linear-gradient(135deg,var(--navy) 0%, var(--navy-deep) 100%);
+    color:#fff; padding:22px 24px; border-radius:0 0 14px 14px; margin-bottom:0;
+    display:flex; align-items:center; gap:16px; box-shadow: var(--shadow);
+  }
+  .topbar .badge{
+    width:52px;height:52px;border-radius:50%;background:var(--teal);
+    display:flex;align-items:center;justify-content:center;flex-shrink:0;
+    box-shadow: inset 0 0 0 3px rgba(255,255,255,0.35);
+  }
+  .topbar .badge svg{width:28px;height:28px;}
+  .topbar h1{font-size:19px;margin:0 0 2px;font-weight:700;letter-spacing:.2px;}
+  .topbar p{margin:0;font-size:12.5px;opacity:.8;font-weight:400;}
+
+  /* TABS */
+  .tabs{display:flex;gap:4px;margin-top:0;padding-top:14px;}
+  .tab{
+    padding:10px 18px;font-size:14.5px;font-weight:600;color:var(--ink-soft);
+    background:#E3DDD0;border:1px solid var(--paper-line);border-bottom:none;
+    border-radius:10px 10px 0 0; cursor:pointer; user-select:none;
+    transform:translateY(2px);
+  }
+  .tab.active{background:var(--paper);color:var(--navy);transform:translateY(0);
+    box-shadow:0 -2px 6px rgba(16,48,74,0.05); font-weight:700;}
+
+  .panel{background:var(--paper);border:1px solid var(--paper-line);border-radius:0 10px 10px 10px;
+    padding:26px;box-shadow:var(--shadow);}
+
+  h2.section-title{font-size:16px;color:var(--navy);margin:0 0 14px;padding-bottom:10px;
+    border-bottom:2px solid var(--teal); display:flex; align-items:center; gap:8px;}
+  h2.section-title .w{font-size:12px;background:var(--teal);color:#fff;padding:2px 10px;border-radius:20px;font-weight:700;}
+
+  label{font-size:13px;color:var(--ink-soft);font-weight:600;display:block;margin-bottom:4px;}
+  input[type=text],input[type=date],input[type=number],input[type=password]{
+    width:100%;padding:9px 11px;border:1px solid #D8D0BC;border-radius:8px;font-family:inherit;
+    font-size:14.5px;background:#fff;color:var(--ink);
+  }
+  input:focus{outline:2px solid var(--teal);outline-offset:1px;}
+
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:10px;}
+  .grid4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:14px;margin-bottom:10px;}
+  @media(max-width:700px){.grid2,.grid4{grid-template-columns:1fr;}}
+
+  .cat-card{border:1px solid var(--paper-line);border-radius:10px;margin-bottom:16px;overflow:hidden;}
+  .cat-head{background:var(--navy);color:#fff;padding:10px 16px;display:flex;justify-content:space-between;align-items:center;}
+  .cat-head .name{font-weight:700;font-size:14.5px;}
+  .cat-head .weight{background:var(--gold);padding:2px 10px;border-radius:20px;font-size:12px;font-weight:700;}
+  .item-row{display:flex;justify-content:space-between;align-items:center;gap:14px;
+    padding:12px 16px;border-top:1px solid var(--paper-line);}
+  .item-row .txt{font-size:14px;color:var(--ink);flex:1;}
+  .pills{display:flex;gap:6px;flex-shrink:0;}
+  .pill{
+    width:36px;height:36px;border-radius:8px;border:1.5px solid #D8D0BC;background:#fff;
+    display:flex;align-items:center;justify-content:center;cursor:pointer;font-weight:700;
+    font-size:14px;color:var(--ink-soft);transition:.12s;
+  }
+  .pill:hover{border-color:var(--teal);}
+  .pill.sel{background:var(--teal);border-color:var(--teal);color:#fff;}
+  .scale-note{font-size:11px;color:var(--ink-soft);padding:8px 16px 12px;background:#fbfaf6;}
+  .cat-sub{padding:10px 16px;background:var(--teal-light);display:flex;justify-content:space-between;font-size:13px;font-weight:700;color:var(--navy);}
+
+  .summary-box{border:2px solid var(--navy);border-radius:12px;padding:18px 20px;margin-top:18px;
+    background:#fff; display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:14px;}
+  .summary-box .total{font-size:34px;font-weight:800;color:var(--navy);}
+  .summary-box .total span{font-size:15px;color:var(--ink-soft);font-weight:600;}
+  .result-tag{padding:8px 18px;border-radius:30px;font-weight:700;font-size:14px;}
+  .result-tag.pass{background:var(--ok-bg);color:var(--ok);border:2px solid var(--ok);}
+  .result-tag.fail{background:var(--bad-bg);color:var(--bad);border:2px solid var(--bad);}
+
+  .btn{padding:10px 20px;border-radius:8px;border:none;font-weight:700;font-size:14.5px;cursor:pointer;font-family:inherit;}
+  .btn-primary{background:var(--navy);color:#fff;}
+  .btn-primary:hover{background:var(--navy-deep);}
+  .btn-teal{background:var(--teal);color:#fff;}
+  .btn-outline{background:#fff;color:var(--navy);border:1.5px solid var(--navy);}
+  .btn-danger{background:var(--bad);color:#fff;}
+  .btn-ghost{background:transparent;color:var(--ink-soft);border:1px solid #D8D0BC;}
+  .btn-row{display:flex;gap:10px;margin-top:18px;flex-wrap:wrap;}
+
+  /* ADMIN */
+  .lock-screen{max-width:360px;margin:40px auto;text-align:center;}
+  .lock-screen .icon{font-size:38px;margin-bottom:10px;}
+  .cat-edit{border:1px solid var(--paper-line);border-radius:10px;padding:16px;margin-bottom:14px;background:#fff;}
+  .item-edit-row{display:flex;gap:8px;margin-bottom:8px;align-items:center;}
+  .item-edit-row input{flex:1;}
+  .small-x{width:30px;height:30px;flex-shrink:0;border-radius:6px;border:1px solid #D8D0BC;background:#fff;cursor:pointer;color:var(--bad);font-weight:700;}
+  .weight-warning{font-size:12.5px;color:var(--bad);font-weight:700;margin-top:4px;}
+  .weight-ok{font-size:12.5px;color:var(--ok);font-weight:700;margin-top:4px;}
+
+  /* HISTORY TABLE */
+  table.hist{width:100%;border-collapse:collapse;font-size:13.5px;}
+  table.hist th{background:var(--navy);color:#fff;text-align:left;padding:9px 10px;}
+  table.hist td{padding:9px 10px;border-bottom:1px solid var(--paper-line);}
+  table.hist tr:hover td{background:#fbfaf6;}
+  .chip{padding:3px 10px;border-radius:20px;font-size:11.5px;font-weight:700;}
+  .chip.pass{background:var(--ok-bg);color:var(--ok);}
+  .chip.fail{background:var(--bad-bg);color:var(--bad);}
+  .row-actions button{margin-right:6px;padding:5px 10px;font-size:12px;border-radius:6px;border:1px solid #D8D0BC;background:#fff;cursor:pointer;}
+  .empty-state{text-align:center;padding:50px 20px;color:var(--ink-soft);}
+
+  .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);
+    background:var(--navy);color:#fff;padding:12px 22px;border-radius:30px;font-size:14px;font-weight:600;
+    box-shadow:0 4px 16px rgba(0,0,0,.2); z-index:999; opacity:0; transition:.25s;}
+  .toast.show{opacity:1;}
+
+  .missing{outline:2px solid var(--bad) !important;border-radius:10px;}
+
+  /* PRINT SHEET (hidden on screen) */
+  #printSheet{display:none;}
+
+  @media print{
+    body *{visibility:hidden;}
+    #printSheet, #printSheet *{visibility:visible;}
+    #printSheet{display:block;position:absolute;left:0;top:0;width:100%;padding:14mm;font-family:'Sarabun',sans-serif;color:#000;}
+    .no-print{display:none !important;}
+  }
+  .ps-title{text-align:center;font-size:19px;font-weight:700;margin-bottom:2px;}
+  .ps-sub{text-align:center;font-size:13px;margin-bottom:16px;color:#333;}
+  .ps-info{width:100%;border-collapse:collapse;margin-bottom:14px;font-size:13.5px;}
+  .ps-info td{padding:5px 4px;}
+  .ps-cattable{width:100%;border-collapse:collapse;margin-bottom:14px;font-size:13px;}
+  .ps-cattable th{background:#eee;border:1px solid #999;padding:6px;text-align:left;}
+  .ps-cattable td{border:1px solid #999;padding:6px;}
+  .ps-cattable .catrow th{background:#dfe9e7;font-weight:700;}
+  .ps-summary{width:100%;border-collapse:collapse;margin-bottom:20px;font-size:13.5px;}
+  .ps-summary th,.ps-summary td{border:1px solid #999;padding:7px;}
+  .ps-summary th{background:#eee;}
+  .stamp{
+    display:inline-block; border:3px double #A6403A; color:#A6403A; border-radius:50%;
+    width:88px;height:88px; text-align:center; line-height:1.15; font-weight:800; font-size:12px;
+    transform:rotate(-8deg); padding-top:22px;
+  }
+  .stamp.ok{border-color:#2F7A54;color:#2F7A54;}
+  .sig-wrap{display:flex;justify-content:space-between;margin-top:30px;gap:10px;}
+  .sig-box{flex:1;text-align:center;font-size:13px;}
+  .sig-line{border-bottom:1px dotted #333;height:44px;margin-bottom:6px;}
+  .sig-role{font-weight:700;margin-top:4px;}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div id="printSheet"></div>
+<div class="toast" id="toast"></div>
+
+<script>
+const STORAGE_CONFIG_KEY = 'nurse-eval-config';
+const STORAGE_RECORDS_KEY = 'nurse-eval-records';
+
+const DEFAULT_CONFIG = {
+  passThreshold: 65,
+  adminPassword: "nurse2026",
+  categories: [
+    { id:"achieve", name:"ผลสัมฤทธิ์งาน", weight:50, items:[
+      {id:"a1", text:"คุณภาพของการปฏิบัติการพยาบาลตามมาตรฐานวิชาชีพ"},
+      {id:"a2", text:"ปริมาณงานที่ปฏิบัติสำเร็จเทียบกับเป้าหมายที่กำหนด"},
+      {id:"a3", text:"ความถูกต้อง แม่นยำ และความปลอดภัยในการให้การพยาบาล"},
+      {id:"a4", text:"ความรวดเร็วและความตรงต่อเวลาในการปฏิบัติงาน"},
+      {id:"a5", text:"ความครบถ้วนถูกต้องของการบันทึกเวชระเบียน/เอกสารทางการพยาบาล"}
+    ]},
+    { id:"competency", name:"สมรรถนะหลัก", weight:30, items:[
+      {id:"c1", text:"การทำงานเป็นทีมและการประสานงานกับสหวิชาชีพ"},
+      {id:"c2", text:"การมุ่งผลสัมฤทธิ์และความเชี่ยวชาญในวิชาชีพ"},
+      {id:"c3", text:"จิตบริการและการดูแลผู้ป่วยด้วยความเอื้ออาทร"},
+      {id:"c4", text:"การยึดมั่นในหลักจริยธรรมและจรรยาบรรณวิชาชีพ"},
+      {id:"c5", text:"การคิดวิเคราะห์และการแก้ไขปัญหาเฉพาะหน้า"}
+    ]},
+    { id:"personal", name:"คุณลักษณะส่วนบุคคล", weight:20, items:[
+      {id:"p1", text:"ความรับผิดชอบต่อหน้าที่ที่ได้รับมอบหมาย"},
+      {id:"p2", text:"การตรงต่อเวลาและวินัยในการปฏิบัติงาน"},
+      {id:"p3", text:"มนุษยสัมพันธ์และทักษะการสื่อสาร"},
+      {id:"p4", text:"ความคิดริเริ่มสร้างสรรค์ในการพัฒนางาน"}
+    ]}
+  ]
+};
+
+const SCALE_LABELS = {1:"ต้องปรับปรุง",2:"พอใช้",3:"ปานกลาง",4:"ดี",5:"ดีมาก"};
+
+let state = {
+  tab: 'eval',
+  config: null,
+  records: [],
+  adminUnlocked: false,
+  employee: { name:'', position:'พยาบาลวิชาชีพ', dept:'', date: new Date().toISOString().slice(0,10), evaluator:'', supervisor:'' },
+  scores: {},
+  loaded: false
+};
+
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 2200);
+}
+
+async function loadAll(){
+  try{
+    const cfgRes = await window.storage.get(STORAGE_CONFIG_KEY, false);
+    state.config = cfgRes ? JSON.parse(cfgRes.value) : structuredClone(DEFAULT_CONFIG);
+  }catch(e){ state.config = structuredClone(DEFAULT_CONFIG); }
+  try{
+    const recRes = await window.storage.get(STORAGE_RECORDS_KEY, false);
+    state.records = recRes ? JSON.parse(recRes.value) : [];
+  }catch(e){ state.records = []; }
+  resetScores();
+  state.loaded = true;
+  render();
+}
+
+async function saveConfig(){
+  try{ await window.storage.set(STORAGE_CONFIG_KEY, JSON.stringify(state.config), false); }
+  catch(e){ showToast('บันทึกการตั้งค่าล้มเหลว'); }
+}
+async function saveRecords(){
+  try{ await window.storage.set(STORAGE_RECORDS_KEY, JSON.stringify(state.records), false); }
+  catch(e){ showToast('บันทึกข้อมูลล้มเหลว'); }
+}
+
+function resetScores(){
+  state.scores = {};
+  state.config.categories.forEach(cat=>cat.items.forEach(it=>{ state.scores[it.id] = null; }));
+}
+
+function calc(scores, config){
+  let total = 0;
+  const cats = config.categories.map(cat=>{
+    let sum=0, missing=0;
+    cat.items.forEach(it=>{
+      const v = scores[it.id];
+      if(v==null) missing++; else sum += v;
+    });
+    const maxSum = cat.items.length*5;
+    const pct = maxSum>0 ? sum/maxSum : 0;
+    const weighted = pct*cat.weight;
+    total += weighted;
+    return {...cat, sum, maxSum, pct, weighted, missing};
+  });
+  return { total, cats };
+}
+
+function fmt(n){ return Math.round(n*100)/100; }
+
+/* ---------- RENDER ---------- */
+function render(){
+  const app = document.getElementById('app');
+  if(!state.loaded){ app.innerHTML = '<p style="padding:40px;text-align:center;color:#5C5B54;">กำลังโหลดข้อมูล...</p>'; return; }
+
+  app.innerHTML = `
+    <div class="topbar">
+      <div class="badge">${iconNurse()}</div>
+      <div>
+        <h1>ระบบประเมินผลการปฏิบัติงาน</h1>
+        <p>สำหรับข้าราชการตำแหน่งพยาบาล &middot; แบ่ง 3 หมวด พร้อมคำนวณคะแนนถ่วงน้ำหนักอัตโนมัติ</p>
+      </div>
+    </div>
+    <div class="tabs no-print">
+      ${tabBtn('eval','แบบประเมิน')}
+      ${tabBtn('admin','ตั้งค่าเกณฑ์การประเมิน')}
+      ${tabBtn('history','ประวัติ / พิมพ์เอกสาร')}
+    </div>
+    <div class="panel">
+      ${state.tab==='eval' ? renderEvalTab() : state.tab==='admin' ? renderAdminTab() : renderHistoryTab()}
+    </div>
+  `;
+  attachEvalHandlers();
+  if(state.tab==='admin') attachAdminHandlers();
+  if(state.tab==='history') attachHistoryHandlers();
+}
+
+function tabBtn(id,label){
+  return `<div class="tab ${state.tab===id?'active':''}" onclick="switchTab('${id}')">${label}</div>`;
+}
+function switchTab(id){ state.tab = id; if(id!=='admin') state.adminUnlocked = state.adminUnlocked; render(); }
+
+function iconNurse(){
+  return `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="12" cy="12" r="10" fill="white" fill-opacity="0.15"/>
+    <path d="M12 6v12M6 12h12" stroke="white" stroke-width="2.4" stroke-linecap="round"/>
+  </svg>`;
+}
+
+/* ---------- EVAL TAB ---------- */
+function renderEvalTab(){
+  const c = calc(state.scores, state.config);
+  const pass = c.total >= state.config.passThreshold;
+  return `
+  <h2 class="section-title">ข้อมูลผู้รับการประเมิน</h2>
+  <div class="grid2">
+    <div><label>ชื่อ-นามสกุล</label><input type="text" id="f-name" value="${esc(state.employee.name)}" placeholder="เช่น นางสาวสมหญิง ใจดี"></div>
+    <div><label>ตำแหน่ง</label><input type="text" id="f-position" value="${esc(state.employee.position)}"></div>
+  </div>
+  <div class="grid2">
+    <div><label>หน่วยงาน/สังกัด</label><input type="text" id="f-dept" value="${esc(state.employee.dept)}" placeholder="เช่น หอผู้ป่วยอายุรกรรม โรงพยาบาล..."></div>
+    <div><label>วันที่ประเมิน</label><input type="date" id="f-date" value="${state.employee.date}"></div>
+  </div>
+  <div class="grid2">
+    <div><label>ผู้ประเมิน</label><input type="text" id="f-evaluator" value="${esc(state.employee.evaluator)}"></div>
+    <div><label>ผู้บังคับบัญชา</label><input type="text" id="f-supervisor" value="${esc(state.employee.supervisor)}"></div>
+  </div>
+
+  <h2 class="section-title" style="margin-top:22px;">แบบประเมิน 3 หมวด <span class="w">ให้คะแนนรายข้อ 1-5</span></h2>
+  ${c.cats.map(cat=>renderCatCard(cat)).join('')}
+
+  <div class="summary-box">
+    <div>
+      <div class="total">${fmt(c.total)}<span> / 100 คะแนน</span></div>
+      <div style="font-size:12.5px;color:var(--ink-soft);">เกณฑ์ผ่าน ≥ ${state.config.passThreshold} คะแนน</div>
+    </div>
+    <div class="result-tag ${pass?'pass':'fail'}">${pass?'ผ่านเกณฑ์การประเมิน':'ไม่ผ่านเกณฑ์การประเมิน'}</div>
+  </div>
+
+  <div class="btn-row no-print">
+    <button class="btn btn-primary" id="btn-save-eval">บันทึกผลการประเมิน</button>
+    <button class="btn btn-ghost" id="btn-clear-eval">ล้างแบบฟอร์ม</button>
+  </div>
+  `;
+}
+
+function renderCatCard(cat){
+  return `
+  <div class="cat-card">
+    <div class="cat-head"><span class="name">${esc(cat.name)}</span><span class="weight">${cat.weight}%</span></div>
+    ${cat.items.map(it=>`
+      <div class="item-row" data-item="${it.id}">
+        <div class="txt">${esc(it.text)}</div>
+        <div class="pills">
+          ${[1,2,3,4,5].map(v=>`<div class="pill ${state.scores[it.id]===v?'sel':''}" data-item="${it.id}" data-val="${v}" title="${v} - ${SCALE_LABELS[v]}">${v}</div>`).join('')}
+        </div>
+      </div>
+    `).join('')}
+    <div class="scale-note">ระดับคะแนน: 1 ต้องปรับปรุง &nbsp; 2 พอใช้ &nbsp; 3 ปานกลาง &nbsp; 4 ดี &nbsp; 5 ดีมาก</div>
+    <div class="cat-sub"><span>คะแนนดิบรวม: ${cat.sum}/${cat.maxSum}</span><span>คะแนนถ่วงน้ำหนัก: ${fmt(cat.weighted)} / ${cat.weight}</span></div>
+  </div>`;
+}
+
+function attachEvalHandlers(){
+  if(state.tab!=='eval') return;
+  ['name','position','dept','date','evaluator','supervisor'].forEach(f=>{
+    const el = document.getElementById('f-'+f);
+    if(el) el.addEventListener('input', e=>{ state.employee[f] = e.target.value; });
+  });
+  document.querySelectorAll('.pill').forEach(p=>{
+    p.addEventListener('click', ()=>{
+      const item = p.dataset.item, val = parseInt(p.dataset.val);
+      state.scores[item] = val;
+      render();
+    });
+  });
+  const saveBtn = document.getElementById('btn-save-eval');
+  if(saveBtn) saveBtn.addEventListener('click', onSaveEvaluation);
+  const clearBtn = document.getElementById('btn-clear-eval');
+  if(clearBtn) clearBtn.addEventListener('click', ()=>{
+    state.employee = { name:'', position:'พยาบาลวิชาชีพ', dept:'', date:new Date().toISOString().slice(0,10), evaluator:'', supervisor:'' };
+    resetScores();
+    render();
+  });
+}
+
+async function onSaveEvaluation(){
+  if(!state.employee.name.trim()){ showToast('กรุณากรอกชื่อ-นามสกุลผู้รับการประเมิน'); return; }
+  const c = calc(state.scores, state.config);
+  const missingCats = c.cats.filter(cc=>cc.missing>0);
+  if(missingCats.length>0){
+    showToast('กรุณาให้คะแนนให้ครบทุกข้อก่อนบันทึก');
+    document.querySelectorAll('.item-row').forEach(r=>r.classList.remove('missing'));
+    missingCats.forEach(cc=>{
+      cc.items.forEach(it=>{
+        if(state.scores[it.id]==null){
+          const row = document.querySelector(`.item-row[data-item="${it.id}"]`);
+          if(row) row.classList.add('missing');
+        }
+      });
+    });
+    return;
+  }
+  const pass = c.total >= state.config.passThreshold;
+  const record = {
+    id: 'rec_' + Date.now(),
+    employee: {...state.employee},
+    scores: {...state.scores},
+    total: fmt(c.total),
+    catBreakdown: c.cats.map(cc=>({id:cc.id,name:cc.name,weight:cc.weight,sum:cc.sum,maxSum:cc.maxSum,weighted:fmt(cc.weighted)})),
+    result: pass ? 'ผ่าน' : 'ไม่ผ่าน',
+    passThresholdAtSave: state.config.passThreshold,
+    createdAt: new Date().toISOString()
+  };
+  state.records.unshift(record);
+  await saveRecords();
+  showToast('บันทึกผลการประเมินเรียบร้อยแล้ว');
+  state.tab = 'history';
+  render();
+}
+
+/* ---------- ADMIN TAB ---------- */
+function renderAdminTab(){
+  if(!state.adminUnlocked){
+    return `
+    <div class="lock-screen">
+      <div class="icon">🔒</div>
+      <h2 class="section-title" style="justify-content:center;border:none;">เข้าสู่ระบบผู้ดูแล</h2>
+      <p style="font-size:13px;color:var(--ink-soft);">กรุณากรอกรหัสผ่าน Admin เพื่อแก้ไขหมวด/น้ำหนัก/เกณฑ์การประเมิน</p>
+      <input type="password" id="admin-pass" placeholder="รหัสผ่าน Admin" style="margin-bottom:12px;">
+      <button class="btn btn-primary" id="admin-unlock-btn" style="width:100%;">เข้าสู่ระบบ</button>
+      <p id="admin-err" style="color:var(--bad);font-size:12.5px;margin-top:10px;"></p>
+      <p style="font-size:11.5px;color:var(--ink-soft);margin-top:16px;">รหัสผ่านเริ่มต้น: <b>nurse2026</b> (แนะนำให้เปลี่ยนหลังเข้าใช้งานครั้งแรก)</p>
+    </div>`;
+  }
+
+  const totalWeight = state.config.categories.reduce((s,c)=>s+Number(c.weight),0);
+
+  return `
+  <h2 class="section-title">ตั้งค่าหมวดและน้ำหนักคะแนน <span class="w">รวมน้ำหนักต้อง = 100%</span></h2>
+  <div id="cat-edit-wrap">
+    ${state.config.categories.map((cat,ci)=>renderCatEdit(cat,ci)).join('')}
+  </div>
+  <div class="${totalWeight===100?'weight-ok':'weight-warning'}" id="weight-total-msg">
+    น้ำหนักรวมปัจจุบัน: ${totalWeight}% ${totalWeight===100?'✓ ถูกต้อง':'⚠ ต้องรวมเป็น 100%'}
+  </div>
+  <div class="btn-row">
+    <button class="btn btn-outline" id="btn-add-cat">+ เพิ่มหมวดใหม่</button>
+  </div>
+
+  <h2 class="section-title" style="margin-top:26px;">เกณฑ์การผ่านการประเมิน</h2>
+  <div class="grid2">
+    <div><label>คะแนนขั้นต่ำที่ถือว่า "ผ่าน" (จาก 100)</label>
+      <input type="number" id="pass-threshold" min="0" max="100" value="${state.config.passThreshold}"></div>
+  </div>
+
+  <h2 class="section-title" style="margin-top:26px;">เปลี่ยนรหัสผ่าน Admin</h2>
+  <div class="grid2">
+    <div><label>รหัสผ่านใหม่</label><input type="password" id="new-admin-pass" placeholder="เว้นว่างหากไม่ต้องการเปลี่ยน"></div>
+  </div>
+
+  <div class="btn-row">
+    <button class="btn btn-primary" id="btn-save-config">บันทึกการตั้งค่า</button>
+    <button class="btn btn-danger" id="btn-reset-config">รีเซ็ตเป็นค่าเริ่มต้น</button>
+    <button class="btn btn-ghost" id="btn-lock-admin">ออกจากระบบผู้ดูแล</button>
+  </div>
+  `;
+}
+
+function renderCatEdit(cat, ci){
+  return `
+  <div class="cat-edit" data-catidx="${ci}">
+    <div class="grid4" style="align-items:end;">
+      <div style="grid-column:span 2;"><label>ชื่อหมวด</label><input type="text" class="cat-name-input" data-catidx="${ci}" value="${esc(cat.name)}"></div>
+      <div><label>น้ำหนัก (%)</label><input type="number" class="cat-weight-input" data-catidx="${ci}" min="0" max="100" value="${cat.weight}"></div>
+      <div><button class="btn btn-ghost del-cat-btn" data-catidx="${ci}" style="width:100%;color:var(--bad);">ลบหมวดนี้</button></div>
+    </div>
+    <label style="margin-top:8px;">รายการประเมิน (ข้อ)</label>
+    <div class="item-edit-list" data-catidx="${ci}">
+      ${cat.items.map((it,ii)=>`
+        <div class="item-edit-row">
+          <input type="text" class="item-text-input" data-catidx="${ci}" data-itemidx="${ii}" value="${esc(it.text)}">
+          <button class="small-x del-item-btn" data-catidx="${ci}" data-itemidx="${ii}">✕</button>
+        </div>
+      `).join('')}
+    </div>
+    <button class="btn btn-ghost add-item-btn" data-catidx="${ci}" style="font-size:13px;padding:6px 14px;">+ เพิ่มรายการ</button>
+  </div>`;
+}
+
+function attachAdminHandlers(){
+  const unlockBtn = document.getElementById('admin-unlock-btn');
+  if(unlockBtn){
+    unlockBtn.addEventListener('click', ()=>{
+      const val = document.getElementById('admin-pass').value;
+      if(val === state.config.adminPassword){ state.adminUnlocked = true; render(); }
+      else { document.getElementById('admin-err').textContent = 'รหัสผ่านไม่ถูกต้อง'; }
+    });
+    return;
+  }
+  document.querySelectorAll('.cat-name-input').forEach(el=>{
+    el.addEventListener('input', e=>{ state.config.categories[e.target.dataset.catidx].name = e.target.value; });
+  });
+  document.querySelectorAll('.cat-weight-input').forEach(el=>{
+    el.addEventListener('input', e=>{
+      state.config.categories[e.target.dataset.catidx].weight = Number(e.target.value);
+      updateWeightMsg();
+    });
+  });
+  document.querySelectorAll('.item-text-input').forEach(el=>{
+    el.addEventListener('input', e=>{
+      const {catidx,itemidx} = e.target.dataset;
+      state.config.categories[catidx].items[itemidx].text = e.target.value;
+    });
+  });
+  document.querySelectorAll('.del-item-btn').forEach(el=>{
+    el.addEventListener('click', e=>{
+      const {catidx,itemidx} = e.target.dataset;
+      state.config.categories[catidx].items.splice(itemidx,1);
+      render();
+    });
+  });
+  document.querySelectorAll('.add-item-btn').forEach(el=>{
+    el.addEventListener('click', e=>{
+      const ci = e.target.dataset.catidx;
+      const n = state.config.categories[ci].items.length+1;
+      state.config.categories[ci].items.push({id:'item_'+Date.now()+'_'+n, text:'รายการประเมินใหม่'});
+      render();
+    });
+  });
+  document.querySelectorAll('.del-cat-btn').forEach(el=>{
+    el.addEventListener('click', e=>{
+      if(confirm('ยืนยันการลบหมวดนี้?')){
+        state.config.categories.splice(e.target.dataset.catidx,1);
+        render();
+      }
+    });
+  });
+  const addCat = document.getElementById('btn-add-cat');
+  if(addCat) addCat.addEventListener('click', ()=>{
+    state.config.categories.push({id:'cat_'+Date.now(), name:'หมวดใหม่', weight:0, items:[{id:'item_'+Date.now(), text:'รายการประเมินใหม่'}]});
+    render();
+  });
+  const threshold = document.getElementById('pass-threshold');
+  if(threshold) threshold.addEventListener('input', e=>{ state.config.passThreshold = Number(e.target.value); });
+
+  const saveCfg = document.getElementById('btn-save-config');
+  if(saveCfg) saveCfg.addEventListener('click', async ()=>{
+    const totalWeight = state.config.categories.reduce((s,c)=>s+Number(c.weight),0);
+    if(totalWeight !== 100){ showToast('น้ำหนักรวมต้องเท่ากับ 100% ก่อนบันทึก'); return; }
+    const newPass = document.getElementById('new-admin-pass').value;
+    if(newPass.trim()) state.config.adminPassword = newPass.trim();
+    await saveConfig();
+    resetScores();
+    showToast('บันทึกการตั้งค่าเรียบร้อยแล้ว');
+    render();
+  });
+  const resetCfg = document.getElementById('btn-reset-config');
+  if(resetCfg) resetCfg.addEventListener('click', async ()=>{
+    if(confirm('ยืนยันการรีเซ็ตเกณฑ์การประเมินทั้งหมดเป็นค่าเริ่มต้น?')){
+      const keepPass = state.config.adminPassword;
+      state.config = structuredClone(DEFAULT_CONFIG);
+      state.config.adminPassword = keepPass;
+      await saveConfig();
+      resetScores();
+      showToast('รีเซ็ตเป็นค่าเริ่มต้นแล้ว');
+      render();
+    }
+  });
+  const lockBtn = document.getElementById('btn-lock-admin');
+  if(lockBtn) lockBtn.addEventListener('click', ()=>{ state.adminUnlocked = false; render(); });
+}
+
+function updateWeightMsg(){
+  const totalWeight = state.config.categories.reduce((s,c)=>s+Number(c.weight),0);
+  const msg = document.getElementById('weight-total-msg');
+  if(msg){
+    msg.className = totalWeight===100?'weight-ok':'weight-warning';
+    msg.textContent = `น้ำหนักรวมปัจจุบัน: ${totalWeight}% ${totalWeight===100?'✓ ถูกต้อง':'⚠ ต้องรวมเป็น 100%'}`;
+  }
+}
+
+/* ---------- HISTORY TAB ---------- */
+function renderHistoryTab(){
+  if(state.records.length===0){
+    return `<div class="empty-state"><p style="font-size:15px;">ยังไม่มีประวัติการประเมิน</p><p style="font-size:13px;">บันทึกแบบประเมินจากแท็บ "แบบประเมิน" เพื่อดูประวัติและพิมพ์เอกสารที่นี่</p></div>`;
+  }
+  return `
+  <h2 class="section-title">ประวัติการประเมิน <span class="w">${state.records.length} รายการ</span></h2>
+  <div style="overflow-x:auto;">
+  <table class="hist">
+    <thead><tr><th>วันที่</th><th>ชื่อ-นามสกุล</th><th>หน่วยงาน</th><th>คะแนนรวม</th><th>ผล</th><th>จัดการ</th></tr></thead>
+    <tbody>
+      ${state.records.map(r=>`
+        <tr>
+          <td>${thDate(r.employee.date)}</td>
+          <td>${esc(r.employee.name)}</td>
+          <td>${esc(r.employee.dept||'-')}</td>
+          <td>${r.total}</td>
+          <td><span class="chip ${r.result==='ผ่าน'?'pass':'fail'}">${r.result}</span></td>
+          <td class="row-actions">
+            <button class="print-btn" data-id="${r.id}">พิมพ์เอกสาร</button>
+            <button class="del-rec-btn" data-id="${r.id}" style="color:var(--bad);">ลบ</button>
+          </td>
+        </tr>
+      `).join('')}
+    </tbody>
+  </table>
+  </div>
+  `;
+}
+
+function thDate(iso){
+  if(!iso) return '-';
+  const [y,m,d] = iso.split('-');
+  const monthsTH = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+  return `${parseInt(d)} ${monthsTH[parseInt(m)-1]} ${parseInt(y)+543}`;
+}
+
+function attachHistoryHandlers(){
+  document.querySelectorAll('.print-btn').forEach(btn=>{
+    btn.addEventListener('click', e=>{
+      const rec = state.records.find(r=>r.id===e.target.dataset.id);
+      if(rec) printRecord(rec);
+    });
+  });
+  document.querySelectorAll('.del-rec-btn').forEach(btn=>{
+    btn.addEventListener('click', async e=>{
+      if(confirm('ยืนยันการลบรายการประเมินนี้?')){
+        state.records = state.records.filter(r=>r.id!==e.target.dataset.id);
+        await saveRecords();
+        render();
+      }
+    });
+  });
+}
+
+function printRecord(rec){
+  const pass = rec.result === 'ผ่าน';
+  const sheet = document.getElementById('printSheet');
+  sheet.innerHTML = `
+    <div class="ps-title">แบบประเมินผลการปฏิบัติงานข้าราชการ</div>
+    <div class="ps-sub">ตำแหน่ง ${esc(rec.employee.position)} &nbsp;|&nbsp; ประเมินตามหมวดผลสัมฤทธิ์งาน สมรรถนะหลัก และคุณลักษณะส่วนบุคคล</div>
+    <table class="ps-info">
+      <tr><td style="width:18%;"><b>ชื่อ-นามสกุล</b></td><td style="width:32%;">${esc(rec.employee.name)}</td>
+          <td style="width:18%;"><b>วันที่ประเมิน</b></td><td>${thDate(rec.employee.date)}</td></tr>
+      <tr><td><b>ตำแหน่ง</b></td><td>${esc(rec.employee.position)}</td>
+          <td><b>หน่วยงาน</b></td><td>${esc(rec.employee.dept||'-')}</td></tr>
+      <tr><td><b>ผู้ประเมิน</b></td><td>${esc(rec.employee.evaluator||'-')}</td>
+          <td><b>ผู้บังคับบัญชา</b></td><td>${esc(rec.employee.supervisor||'-')}</td></tr>
+    </table>
+
+    ${rec.catBreakdown.map(cat=>`
+      <table class="ps-cattable">
+        <tr class="catrow"><th colspan="2">${esc(cat.name)} (น้ำหนัก ${cat.weight}%)</th></tr>
+        <tr><th style="width:78%;">รายการประเมิน</th><th>คะแนน (1-5)</th></tr>
+        ${cat.itemsDetail ? '' : ''}
+        ${state.config.categories.find(c=>c.id===cat.id) ? state.config.categories.find(c=>c.id===cat.id).items.map(it=>`
+          <tr><td>${esc(it.text)}</td><td style="text-align:center;">${rec.scores[it.id] ?? '-'}</td></tr>
+        `).join('') : `<tr><td colspan="2">คะแนนรวม ${cat.sum} / ${cat.maxSum}</td></tr>`}
+        <tr><td style="text-align:right;"><b>คะแนนถ่วงน้ำหนักของหมวดนี้</b></td><td style="text-align:center;"><b>${cat.weighted} / ${cat.weight}</b></td></tr>
+      </table>
+    `).join('')}
+
+    <table class="ps-summary">
+      <tr><th>หมวด</th><th>น้ำหนัก</th><th>คะแนนที่ได้</th></tr>
+      ${rec.catBreakdown.map(cat=>`<tr><td>${esc(cat.name)}</td><td style="text-align:center;">${cat.weight}%</td><td style="text-align:center;">${cat.weighted}</td></tr>`).join('')}
+      <tr><th>รวม</th><th style="text-align:center;">100%</th><th style="text-align:center;">${rec.total}</th></tr>
+    </table>
+
+    <div style="display:flex;align-items:center;gap:20px;margin-bottom:8px;">
+      <div class="stamp ${pass?'ok':''}">${pass?'ผ่านเกณฑ์<br>การประเมิน':'ไม่ผ่าน<br>เกณฑ์'}</div>
+      <div style="font-size:13px;">เกณฑ์การผ่าน: คะแนนรวมไม่ต่ำกว่า ${rec.passThresholdAtSave} คะแนน จาก 100 คะแนน<br>ผลการประเมิน: <b>${rec.result}</b></div>
+    </div>
+
+    <div class="sig-wrap">
+      <div class="sig-box"><div class="sig-line"></div>(${esc(rec.employee.evaluator||'.......................................')})<div class="sig-role">ผู้ประเมิน</div>วันที่ ......../......../..........</div>
+      <div class="sig-box"><div class="sig-line"></div>(${esc(rec.employee.supervisor||'.......................................')})<div class="sig-role">ผู้บังคับบัญชา</div>วันที่ ......../......../..........</div>
+      <div class="sig-box"><div class="sig-line"></div>(${esc(rec.employee.name)})<div class="sig-role">ผู้รับการประเมิน</div>วันที่ ......../......../..........</div>
+    </div>
+  `;
+  setTimeout(()=>window.print(), 60);
+}
+
+function esc(s){
+  if(s==null) return '';
+  return String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+loadAll();
+</script>
+</body>
+</html>
